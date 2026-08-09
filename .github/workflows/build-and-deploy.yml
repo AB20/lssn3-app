@@ -8,19 +8,27 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: demoapp1
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20
+          cache: npm
+          cache-dependency-path: demoapp1/package-lock.json
 
       - name: Install NPM packages
         run: npm i
@@ -29,13 +37,13 @@ jobs:
         run: npm run build
 
       - name: Run tests
-        run: npm run test
+        run: npm test -- --watchAll=false
 
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v4
         with:
           name: production-files
-          path: ./build
+          path: ./demoapp1/build
 
   deploy:
     name: Deploy
@@ -51,7 +59,7 @@ jobs:
           path: ./build
 
       - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build
